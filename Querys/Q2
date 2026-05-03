@@ -1,0 +1,19 @@
+-- Q2 · Top 10 clientes por revenue neto
+-- Ranking de los 10 clientes que más revenue generan.
+-- Incluye país y número de órdenes como contexto adicional.
+-- El revenue neto descuenta el porcentaje de descuento aplicado.
+
+SELECT TOP 10
+    c.CustomerID,
+    c.CompanyName,
+    c.Country,
+    COUNT(DISTINCT o.OrderID)           AS TotalOrders,
+    SUM(od.Quantity * od.UnitPrice
+        * (1 - od.Discount))              AS NetRevenue,
+    MAX(o.OrderDate)                      AS LastOrderDate
+FROM Customers        c
+JOIN Orders           o  ON o.CustomerID  = c.CustomerID
+JOIN [Order Details]  od ON od.OrderID    = o.OrderID
+WHERE o.ShippedDate IS NOT NULL
+GROUP BY c.CustomerID, c.CompanyName, c.Country
+ORDER BY NetRevenue DESC;

@@ -1,0 +1,23 @@
+-- Q3 · Órdenes pendientes de envío con días de retraso
+-- Identifica órdenes que aún no han sido enviadas.
+-- Calcula días de retraso respecto a la fecha requerida (RequiredDate).
+-- Crítico para gestión de SLA y atención al cliente.
+
+SELECT
+    o.OrderID,
+    c.CompanyName                          AS Customer,
+    e.FirstName + ' ' + e.LastName         AS SalesRep,
+    o.OrderDate,
+    o.RequiredDate,
+    DATEDIFF(day, o.RequiredDate, GETDATE()) AS DaysOverdue,
+    SUM(od.Quantity * od.UnitPrice
+        * (1 - od.Discount))               AS OrderValue
+FROM Orders           o
+JOIN Customers        c  ON c.CustomerID  = o.CustomerID
+JOIN Employees        e  ON e.EmployeeID  = o.EmployeeID
+JOIN [Order Details]  od ON od.OrderID    = o.OrderID
+WHERE o.ShippedDate IS NULL
+  AND o.RequiredDate < GETDATE()
+GROUP BY o.OrderID, c.CompanyName, e.FirstName, e.LastName,
+         o.OrderDate, o.RequiredDate
+ORDER BY DaysOverdue DESC;

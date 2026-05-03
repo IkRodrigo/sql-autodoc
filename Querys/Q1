@@ -1,0 +1,19 @@
+-- Q1 · Revenue por categoría de producto
+-- Calcula el revenue total agrupado por categoría de producto.
+-- Útil para identificar qué líneas de negocio generan más ingresos.
+-- Excluye órdenes canceladas (ShipVia IS NOT NULL como proxy).
+
+SELECT
+    c.CategoryName,
+    COUNT(DISTINCT o.OrderID)          AS TotalOrders,
+    SUM(od.Quantity * od.UnitPrice
+        * (1 - od.Discount))             AS NetRevenue,
+    ROUND(AVG(od.UnitPrice * od.Quantity
+        * (1 - od.Discount)), 2)         AS AvgOrderValue
+FROM Categories       c
+JOIN Products         p  ON p.CategoryID  = c.CategoryID
+JOIN [Order Details]  od ON od.ProductID  = p.ProductID
+JOIN Orders           o  ON o.OrderID     = od.OrderID
+WHERE o.ShippedDate IS NOT NULL
+GROUP BY c.CategoryName
+ORDER BY NetRevenue DESC;

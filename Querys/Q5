@@ -1,0 +1,28 @@
+-- Q5 · Productos con stock crítico vs demanda reciente
+-- Detecta productos cuyo stock actual es menor al reorder level
+-- y los cruza con la demanda de los últimos 90 días.
+-- Esencial para evitar quiebres de stock en productos de alta rotación.
+
+SELECT
+    p.ProductID,
+    p.ProductName,
+    c.CategoryName,
+    p.UnitsInStock,
+    p.ReorderLevel,
+    p.UnitsOnOrder,
+    ISNULL(SUM(od.Quantity), 0)           AS DemandLast90Days,
+    CASE
+        WHEN p.UnitsInStock = 0          THEN 'Sin stock'
+        WHEN p.UnitsInStock <= p.ReorderLevel THEN 'Stock crítico'
+        ELSE 'OK'
+    END                                   AS StockStatus
+FROM Products         p
+JOIN Categories       c  ON c.CategoryID  = p.CategoryID
+LEFT JOIN [Order Details] od ON od.ProductID = p.ProductID
+LEFT JOIN Orders       o  ON o.OrderID     = od.OrderID
+                          AND o.OrderDate >= DATEADD(day, -90, GETDATE())
+WHERE p.Discontinued = 0
+  AND p.UnitsInStock <= p.ReorderLevel
+GROUP BY p.ProductID, p.ProductName, c.CategoryName,
+         p.UnitsInStock, p.ReorderLevel, p.UnitsOnOrder
+ORDER BY p.UnitsInStock ASC, DemandLast90Days DESC

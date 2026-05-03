@@ -1,0 +1,22 @@
+-- Q4 · Performance de empleados por revenue y órdenes
+-- Evalúa el rendimiento de cada vendedor por revenue generado.
+-- Incluye ticket promedio y número de clientes únicos atendidos.
+-- Base para evaluaciones de desempeño comercial.
+
+SELECT
+    e.EmployeeID,
+    e.FirstName + ' ' + e.LastName         AS EmployeeName,
+    e.Title,
+    COUNT(DISTINCT o.OrderID)             AS TotalOrders,
+    COUNT(DISTINCT o.CustomerID)           AS UniqueCustomers,
+    SUM(od.Quantity * od.UnitPrice
+        * (1 - od.Discount))              AS TotalRevenue,
+    ROUND(SUM(od.Quantity * od.UnitPrice
+        * (1 - od.Discount))
+        / COUNT(DISTINCT o.OrderID), 2)  AS AvgTicket
+FROM Employees        e
+JOIN Orders           o  ON o.EmployeeID  = e.EmployeeID
+JOIN [Order Details]  od ON od.OrderID    = o.OrderID
+WHERE o.ShippedDate IS NOT NULL
+GROUP BY e.EmployeeID, e.FirstName, e.LastName, e.Title
+ORDER BY TotalRevenue DESC;
